@@ -1,35 +1,40 @@
-import React, { Component } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import PropTypes from 'prop-types';
 import s from './Modal.module.css';
 
 const modalRoot = document.querySelector('#modal-root');
-export default class Modal extends Component {
-    componentDidMount() {
-        window.addEventListener('keydown', this.handleKeydown)
-    };
 
-    componentWillUnmount() {
-        window.removeEventListener('keydown', this.handleKeydown)
-    };
-
-    handleKeydown = e => {
+export default function Modal ({onClose, children}) {
+    useEffect(() => {
+       window.addEventListener('keydown', handleKeydown)
+        return () => {
+            window.removeEventListener('keydown', handleKeydown)
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    
+    const handleKeydown = e => {
         if (e.code === 'Escape') {
-            this.props.onClose()
+            onClose()
         }
     };
     
-    handleOverleyClick = e => {
+    function handleOverleyClick(e) {
         if (e.currentTarget === e.target) {
-            this.props.onClose();
+            onClose();
         }
-    };
+    }
 
-    render() {
-        return createPortal(
-        <div className={s.Overlay} onClick={this.handleOverleyClick}>
+    return createPortal(
+        <div className={s.Overlay} onClick={handleOverleyClick}>
             <div className={s.Modal}>
-                {this.props.children}
+                {children}
             </div>
         </div>, modalRoot,);
-    }
 }
+
+Modal.propTypes = {
+    onClose: PropTypes.func.isRequired,
+    children: PropTypes.element.isRequired
+};

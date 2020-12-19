@@ -1,36 +1,34 @@
-import React, {Component} from 'react';
+import {useState} from 'react';
 import s from './Searchbar.module.css';
+import PropTypes from 'prop-types';
 
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export default class Searchbar extends Component {
-    state = {
-        search: '',
-    }
-
-    handleChange = event => {
-        this.setState({ search: event.currentTarget.value.toLowerCase() });
+export default function Searchbar ({onSubmit}) {
+    const [search, setSearch] = useState('');
+   
+    const handleChange = event => {
+        setSearch(event.currentTarget.value.toLowerCase());
     };
 
-    handleSubmit = event => {
+    const handleSubmit = event => {
         
         event.preventDefault();
-        if (this.state.search.trim() === '') {
+        if (search.trim() === '') {
             toast.error("Введите имя картинки!");
             return
         }
-        this.props.onSubmit(this.state);
-        this.reset();
+        onSubmit(search);
+        reset();
     };
 
-    reset = () => {
-        this.setState({ search: '' })
+    const reset = () => {
+        setSearch('');
     };
 
-    render() {
-        return (<header className={s.Searchbar}>
-                <form className={s.SearchForm} onSubmit={this.handleSubmit}>
+    return (<header className={s.Searchbar}>
+                <form className={s.SearchForm} onSubmit={handleSubmit}>
                     <button type="submit" className={s.SearchFormButton}>
                         <span className={s.SearchFormButtonLabel}>Search</span>
                     </button>
@@ -38,8 +36,8 @@ export default class Searchbar extends Component {
                     <input
                         className={s.SearchFormInput}
                         type="text"
-                        value={this.state.search}
-                        onChange={this.handleChange}
+                        value={search}
+                        onChange={handleChange}
                         autoComplete="off"
                         autoFocus
                         placeholder="Search images and photos"
@@ -47,5 +45,8 @@ export default class Searchbar extends Component {
                 </form>
             </header>
             );
-    };
-}
+};
+
+Searchbar.propTypes = {
+    onSubmit: PropTypes.func.isRequired,
+};

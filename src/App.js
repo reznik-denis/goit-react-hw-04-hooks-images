@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import Searchbar from './Components/Searchbar/Searchbar';
 import ImageGallery from './Components/ImageGallery/ImageGallery';
@@ -12,57 +12,50 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
-class App extends Component {
-  state = {
-    picture: [],
-    search: null,
-    showModal: false,
-    loading: false,
-    error: null,
-    largeImage: '',
-    altImage: '',
-    pageFetch: 1
-  }
+function App() {
+  const [picture, setPicture] = useState([]);
+  const [search, setSearch] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [largeImage, setLargeImage] = useState('');
+  const [altImage, setAltImage] = useState('');
+  const [pageFetch, setPageFetch] = useState(1);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.search !== this.state.search) {
-      this.fetshSearch();
-    }
-  }
+  useEffect(() => {
+    if (search !== null && search !== '')
+    fetshSearch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
-  toggleModal = (largeImageURL, tags) => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-      largeImage: largeImageURL,
-      altImage: tags
-    }));
+  const toggleModal = (largeImageURL, tags) => {
+    setShowModal(!showModal);
+    setLargeImage(largeImageURL);
+    setAltImage(tags);
   };
 
-  formSubmitHendler = ({ search }) => {
-    if (search !== this.state.search) {
-      this.setState({ picture: [], search, pageFetch: 1 });
+  const formSubmitHendler = (userSearch) => {
+    if (userSearch !== search) {
+      setPicture([]);
+      setSearch(userSearch);
+      setPageFetch(1);
     } else { toast.error("Вы уже ввели это имя!"); };
-    
   };
 
-  fetshSearch = () => {
-    this.setState({ loading: true });
-    const { search, pageFetch } = this.state;
-    Api.fetchImages(search, pageFetch).then(pictures => this.setState(prevState => (
-        { picture: ((this.state.picture === []) ? pictures.hits : ([...prevState.picture, ...pictures.hits])) }
-      )))
-      .catch(error => (this.setState({error})))
+  const fetshSearch = () => {
+    setLoading(true);
+    Api.fetchImages(search, pageFetch).then(pictures => {
+      setPicture(prevState => (picture === []) ? pictures.hits : ([...prevState, ...pictures.hits]))
+    }).catch(error => setError(error))
       .finally(() => {
-        this.onLoadMoreSkroll();
-        this.setState(prevState => ({
-          loading: false,
-          pageFetch: prevState.pageFetch + 1
-        }))
+        onLoadMoreSkroll();
+        setLoading(false);
+        setPageFetch(state => state + 1)
       }); 
   }
 
-  onLoadMoreSkroll = () => {
-    if (this.state.pageFetch >= 2) {
+  const onLoadMoreSkroll = () => {
+    if (pageFetch >= 2) {
       const options = {
         top: null,
         behavior: 'smooth',
@@ -74,26 +67,24 @@ class App extends Component {
       }, 1000);
     }
   };
-
-  render() {
-    const {picture, showModal, error, largeImage, pageFetch, search, altImage, loading} = this.state;
-    return (
+    
+  return (
       <div className="App">
         {error && <h1>{error.massage}</h1>}
 
-        <Searchbar onSubmit={this.formSubmitHendler} />
+        <Searchbar onSubmit={formSubmitHendler} />
 
         <ImageGallery
           pictures={picture}
-          onClick={this.toggleModal} />
+          onClick={toggleModal} />
         
-        {this.state.loading && <LoaderSpinner />}
+        {loading && <LoaderSpinner />}
         
-        {(picture.length !== 0) && (pageFetch >= 2) && <LoadMore onClick={this.fetshSearch} />}
+        {(picture.length !== 0) && (pageFetch >= 2) && <LoadMore onClick={fetshSearch} />}
 
         {search && picture.length === 0 && loading === false && <DefaultNotifeImages />}
         
-        {showModal && <Modal onClose={ this.toggleModal }>
+        {showModal && <Modal onClose={ toggleModal }>
           <img src={largeImage} alt={altImage}/>
         </Modal>}
         
@@ -103,8 +94,6 @@ class App extends Component {
         />
     </div>
   );
-  }
-  
 }
 
 export default App;
